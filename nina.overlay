@@ -1,0 +1,63 @@
+/delete-node/ &{/leds};
+/delete-node/ &{/pwmleds};
+/delete-node/ &{/buttons};
+/delete-node/ &arduino_header;
+/delete-node/ &arduino_adc;
+/delete-node/ &{/aliases};
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &storage_partition;
+
+/ {
+	model = "Thyrakey NINA-B302 nRF52840";
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
+		zephyr,bt-mon-uart = &cdc_acm_uart0;
+		zephyr,bt-c2h-uart = &cdc_acm_uart0;
+	};
+    aliases {
+        watchdog0 = &wdt0;
+    };
+    msc_disk0 {
+        status="okay";
+        compatible = "zephyr,flash-disk";
+        partition = <&storage_partition>;
+        disk-name = "SD";
+        /* cache-size == page erase size */
+        cache-size = <4096>;
+    };
+};
+
+&uart0 {
+	status = "disabled";
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        slot0_partition: partition@c000 {
+            reg = <0x0000C000 0x00066000>;
+        };
+        slot1_partition: partition@72000 {
+            reg = <0x00072000 0x00066000>;
+        };
+        storage_partition: partition@d8000 {
+            label = "storage";
+            reg = <0x000d8000 0x00028000>;
+        };
+    };
+};
+
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+
+    cdc_acm_uart0: cdc_acm_uart0 {
+        compatible = "zephyr,cdc-acm-uart";
+        label = "Zephyr USB CDC-ACM";
+    };
+};
