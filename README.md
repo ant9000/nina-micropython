@@ -24,7 +24,7 @@ cd ~/zephyrproject/zephyr
 west build -b ubx_evkninab3 \
     -d ~/zephyrproject/nina-micropython \
     $BASE/micropython/ports/zephyr/ \
-    -DEXTRA_CONF_FILE=$BASE/usb.conf \
+    -DEXTRA_CONF_FILE=$BASE/nina.conf \
     -DEXTRA_DTC_OVERLAY_FILE=$BASE/nina.overlay \
     -DEXTRA_CFLAGS=-DMICROPY_CONFIG_ROM_LEVEL=MICROPY_CONFIG_ROM_LEVEL_EXTRA_FEATURES
 ```
