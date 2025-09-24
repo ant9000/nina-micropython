@@ -26,7 +26,7 @@ west build -b ubx_evkninab3 \
     $BASE/micropython/ports/zephyr/ \
     -DEXTRA_CONF_FILE=$BASE/nina.conf \
     -DEXTRA_DTC_OVERLAY_FILE=$BASE/nina.overlay \
-    -DEXTRA_CFLAGS=-DMICROPY_CONFIG_ROM_LEVEL=MICROPY_CONFIG_ROM_LEVEL_EXTRA_FEATURES
+    -DEXTRA_CFLAGS="-DMICROPY_CONFIG_ROM_LEVEL=MICROPY_CONFIG_ROM_LEVEL_EXTRA_FEATURES -DMICROPY_PY_MACHINE_BITSTREAM"
 ```
 
 For further work, just move to the build directory:
