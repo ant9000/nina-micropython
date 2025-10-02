@@ -5,35 +5,23 @@ git clone https://github.com/ant9000/nina-micropython
 cd nina-micropython
 ```
 
-Define `BASE` as current dir:
-
-```
-BASE=`pwd`
-```
-
 Clone Micropython repo:
 
 ```
 git clone https://github.com/micropython/micropython
 ```
 
-Move to Zephyr installation and compile:
+Activate Zephyr environment and compile:
 
 ```
-cd ~/zephyrproject/zephyr
-west build -b ubx_evkninab3 \
-    -d ~/zephyrproject/nina-micropython \
-    $BASE/micropython/ports/zephyr/ \
-    -DEXTRA_CONF_FILE=$BASE/nina.conf \
-    -DEXTRA_DTC_OVERLAY_FILE=$BASE/nina.overlay \
-    -DEXTRA_CFLAGS="-DMICROPY_CONFIG_ROM_LEVEL=MICROPY_CONFIG_ROM_LEVEL_EXTRA_FEATURES -DMICROPY_PY_MACHINE_BITSTREAM"
+source ~/zephyrproject/.venv/bin/activate
+./build.sh
 ```
 
-For further work, just move to the build directory:
+To flash the board:
 
 ```
-cd ~/zephyrproject/nina-micropython/
-west flash --runner pyocd
+./flash.sh
 ```
 
 (assuming you have a pyOCD compatible programmer, for instance a FreeDAP one).

@@ -1,0 +1,5 @@
+name: nina
+
+build:
+    cmake: .
+    kconfig: Kconfig

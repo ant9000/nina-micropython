@@ -16,7 +16,6 @@
 		zephyr,uart-mcumgr = &cdc_acm_uart0;
 		zephyr,bt-mon-uart = &cdc_acm_uart0;
 		zephyr,bt-c2h-uart = &cdc_acm_uart0;
-		zephyr,sensor-clock = &timer0;
 	};
     aliases {
         watchdog0 = &wdt0;
@@ -79,6 +78,6 @@ zephyr_udc0: &usbd {
     };
 };
 
-&timer0 {
+&systick {
     status = "okay";
 };
