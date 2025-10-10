@@ -77,7 +77,3 @@ zephyr_udc0: &usbd {
         label = "Zephyr USB CDC-ACM";
     };
 };
-
-&systick {
-    status = "okay";
-};
