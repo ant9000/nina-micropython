@@ -4,14 +4,17 @@
 #include "py/mphal.h"
 #include <stdio.h>
 
-#define NRF_GPIO_PIN_MAP(port, pin) (((pin) & 0x1F) | ((port) << 5))
-
 #define TICKS_PER_US    64
+
+struct gpio_nrfx_cfg {
+    struct gpio_driver_config common;
+    NRF_GPIO_Type *reg;
+};
 
 void machine_bitstream_high_low(mp_hal_pin_obj_t pin, uint32_t *timing_ns, const uint8_t *buf, size_t len) {
     // Convert ns to clock ticks [high_time_0, period_0, high_time_1, period_1].
     for (size_t i = 0; i < 4; ++i) {
-        timing_ns[i] = timing_ns[i] * TICKS_PER_US / 1000;
+        timing_ns[i] = timing_ns[i] / TICKS_PER_US * 1000;
         if (i % 2 == 1) {
             // Convert low_time to period (i.e. add high_time).
             timing_ns[i] += timing_ns[i - 1];
@@ -20,15 +23,15 @@ void machine_bitstream_high_low(mp_hal_pin_obj_t pin, uint32_t *timing_ns, const
 
     mp_hal_pin_output(pin);
 
-    uint8_t port_num = 0; // TODO
-    NRF_GPIO_Type *reg = NRF_GPIO_PIN_MAP(port_num, pin->pin);
+    NRF_GPIO_Type *reg = ((struct gpio_nrfx_cfg *)pin->port->config)->reg;
     uint32_t mask = (1UL << pin->pin);
 
     // Enable DWT in debug core
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-    while (1) {
+    uint8_t retries=5;
+    while (retries--) {
         uint32_t start = DWT->CYCCNT;
         uint32_t cycles = 0;
         uint32_t total_cycles = 0;
