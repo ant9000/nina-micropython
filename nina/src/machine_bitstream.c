@@ -14,7 +14,7 @@ struct gpio_nrfx_cfg {
 void machine_bitstream_high_low(mp_hal_pin_obj_t pin, uint32_t *timing_ns, const uint8_t *buf, size_t len) {
     // Convert ns to clock ticks [high_time_0, period_0, high_time_1, period_1].
     for (size_t i = 0; i < 4; ++i) {
-        timing_ns[i] = timing_ns[i] / TICKS_PER_US * 1000;
+        timing_ns[i] = timing_ns[i] * TICKS_PER_US / 1000;
         if (i % 2 == 1) {
             // Convert low_time to period (i.e. add high_time).
             timing_ns[i] += timing_ns[i - 1];
