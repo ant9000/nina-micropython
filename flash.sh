@@ -12,4 +12,4 @@ which west || {
 cd $(dirname $(which west))
 cd $(west topdir)
 
-west flash --runner pyocd -d $TARGET
+west flash --runner pyocd -d $TARGET $*
