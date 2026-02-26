@@ -8,7 +8,7 @@ cd nina-micropython
 Clone my Micropython repo:
 
 ```
-git clone https://github.com/ant9000/micropython --branch updated_libhydrogen
+git clone https://github.com/ant9000/micropython --branch devel
 ```
 
 Activate Zephyr environment and compile:
