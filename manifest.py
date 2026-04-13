@@ -1,2 +1,2 @@
 freeze("$(PORT_DIR)/modules")
-freeze("crypto")
+freeze("frozen")
