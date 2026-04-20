@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep_ms, time_ns
 from machine import I2C, Pin
 
 class ST25DV:
@@ -33,6 +33,7 @@ class ST25DV:
         assert self.enable_mb(), "MB not enabled"
         self.irq_pin.irq(lambda pin: self.on_gpo())
         assert self.configure_gpo(), "GPO not configured"
+        self._gpo_fired = 0
 
     def _addr(self, reg):
         if reg & ST25DV.IS_DYNAMIC_REGISTER:
@@ -43,13 +44,14 @@ class ST25DV:
         return self.i2c_dev.readfrom_mem(self._addr(reg), reg, nbytes, addrsize=16)
 
     def write_mem(self, reg, data):
-        return self.i2c_dev.writeto_mem(self._addr(reg), reg, data, addrsize=16)
+        res = self.i2c_dev.writeto_mem(self._addr(reg), reg, data, addrsize=16)
+        return res
 
     def reset(self):
         self.enable_pin.off()
-        sleep(.01)
+        sleep_ms(1)
         self.enable_pin.on()
-        sleep(.01)
+        sleep_ms(1)
 
     def is_present(self):
         return self.read_mem(ST25DV.ICREF_REG,1)[0] == 0x51
@@ -58,7 +60,6 @@ class ST25DV:
         unlocked = self.read_mem(ST25DV.I2C_SSO_DYN_REG, 1)[0] & 0x01
         if not unlocked:
             self.write_mem(ST25DV.I2CPASSWD_REG, self.i2c_pass + b'\x09' + self.i2c_pass)
-            sleep(.01)
             unlocked = self.read_mem(ST25DV.I2C_SSO_DYN_REG, 1)[0] & 0x01
         return unlocked
 
@@ -66,30 +67,34 @@ class ST25DV:
         value = self.read_mem(ST25DV.LOCKCFG_REG,1)[0]
         value = bytes([value | 0x01])
         self.write_mem(ST25DV.LOCKCFG_REG, value)
-        sleep(.01)
+        sleep_ms(5)
         return self.read_mem(ST25DV.LOCKCFG_REG,1)[0] & 0x01
 
     def enable_mb_transfer_mode(self):
         value = self.read_mem(ST25DV.MB_MODE_REG,1)[0]
         value = bytes([value | 0x01])
         self.write_mem(ST25DV.MB_MODE_REG, value)
-        sleep(.01)
+        sleep_ms(5)
         return self.read_mem(ST25DV.MB_MODE_REG, 1)[0] & 0x01
 
     def enable_mb(self):
         value = self.read_mem(ST25DV.MB_CTRL_DYN_REG, 1)[0]
         value = bytes([value | 0x01])
         self.write_mem(ST25DV.MB_CTRL_DYN_REG, value)
-        sleep(.01)
+        sleep_ms(5)
         return self.read_mem(ST25DV.MB_CTRL_DYN_REG, 1)[0] & 0x01
 
     def configure_gpo(self):
         # enable GPO, interrupt only on RF_PUT_MSG_EN
         self.write_mem(ST25DV.GPO1_REG, b'\x21')
-        sleep(.01)
+        sleep_ms(5)
         return self.read_mem(ST25DV.GPO1_REG, 1)[0] == 0x21
 
     def on_gpo(self):
+        _gpo_fired = time_ns()
+        if _gpo_fired - self._gpo_fired < 1000000:
+            return
+        self._gpo_fired = _gpo_fired
         message = self.mailbox_get()
         if message and self.on_message_cb:
             self.on_message_cb(self, message)
@@ -102,7 +107,7 @@ class ST25DV:
                     value = self.read_mem(ST25DV.MB_CTRL_DYN_REG, 1)[0]
                 except OSError:
                     pass
-            if value & 0x80 != 0x80:
+            if value & 0x84 != 0x84:
                 return
         nbytes = self.read_mem(ST25DV.MBLEN_DYN_REG, 1)[0]
         if nbytes:
@@ -112,4 +117,3 @@ class ST25DV:
     def mailbox_put(self, message):
         assert len(message) < 255, "Message too long"
         self.write_mem(ST25DV.MAILBOX_RAM_REG, message)
-        sleep(.01)
