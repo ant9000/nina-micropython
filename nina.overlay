@@ -12,10 +12,6 @@
 	model = "Thyrakey NINA-B302 nRF52840";
 	chosen {
 		zephyr,console = &cdc_acm_uart0;
-		zephyr,shell-uart = &cdc_acm_uart0;
-		zephyr,uart-mcumgr = &cdc_acm_uart0;
-		zephyr,bt-mon-uart = &cdc_acm_uart0;
-		zephyr,bt-c2h-uart = &cdc_acm_uart0;
 	};
     aliases {
         watchdog0 = &wdt0;
@@ -24,7 +20,7 @@
         compatible = "zephyr,fstab";
         lfs1: lfs1 {
             compatible = "zephyr,fstab,littlefs";
-            mount-point = "/";
+            mount-point = "/flash";
             automount;
             partition = <&storage_partition>;
             read-size = <1>;
@@ -81,6 +77,6 @@ zephyr_udc0: &usbd {
 
     cdc_acm_uart0: cdc_acm_uart0 {
         compatible = "zephyr,cdc-acm-uart";
-        label = "Zephyr USB CDC-ACM";
+        label = "Thyrakey";
     };
 };
