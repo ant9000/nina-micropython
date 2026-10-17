@@ -67,7 +67,7 @@ class Identity:
         return (key, pubkey)
 
 class Door(Identity):
-    CHALLENGE_TIMEOUT_NS = 1_000_000_000  # 1s
+    CHALLENGE_TIMEOUT_NS = 5_000_000_000  # 5s
 
     def __init__(self, debug=False):
         super().__init__()
@@ -111,20 +111,21 @@ class Door(Identity):
         # expire pending challenge
         now = time_ns()
         challenge_ts = self._state.get("challenge_ts", None)
-        if challenge_ts and now - challenge_ts > Door.CHALLENGE_TIMEOUT_NS:
+        if challenge_ts and (now - challenge_ts > Door.CHALLENGE_TIMEOUT_NS):
             self.print("Pending challenge expired")
             self._state = {}
 
         if not "challenge" in self._state:
-            challenge = Challenge(self.key, self.pubkey, self.pubkey)
+            challenge = Challenge(self.key, self.pubkey, signed.pubkey)
             self.print(f"Challenge seed: {challenge.seed.hex()}")
             self._state = {
-                'command': signed.data,
+                'command': signed.payload,
                 'challenge': challenge,
                 'challenge_ts': now
             }
             return challenge.data
 
+        answer = None
         if self._state["challenge"].is_valid(signed.data):
             # user proved ownership of key corresponding to signed.pubkey
             elapsed = (now - self._state["challenge_ts"]) / 1_000_000
@@ -136,16 +137,16 @@ class Door(Identity):
                 answer = SignedMessage.sign(self.key, self.pubkey, payload)
         else:
             self.print("ERROR: peer authentication failed")
-            answer = None
         self._state = {}
         return answer
 
     def exec(self, pubkey, command):
         answer = None
-        if pubkey in self.pubkeys:
-            # admin commands
-            pass
+        if pubkey in self.owners:
+            role = "owner"
+            # TODO: admin commands
         else:
-            # user commands
-            pass
+            role = "user"
+            # TODO: user commands
+        print(f"ROLE: {role}, USER: {pubkey.hex()}, COMMAND: {command.hex()}")
         return answer
