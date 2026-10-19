@@ -63,7 +63,8 @@ class Identity:
         except:
             key = os.urandom(32)
             pubkey = nrf_oberon.ed25519_public_key(key)
-            open("key.bin", "wb").write(key + pubkey)
+            with open("key.bin", "wb") as f:
+                f.write(key + pubkey)
         return (key, pubkey)
 
 class Door(Identity):
