@@ -6,8 +6,6 @@ def hexdump(data):
     for i in range(0, len(data), 8):
         print(data[i:i+8].hex(" "))
 
-door = Door(debug=True)
-
 def message_arrived(nfc, data):
     print(f"Message arrived: {data.hex()}")
     answer = door.process_data(data)
@@ -21,8 +19,14 @@ nfc = ST25DV(
     irq_pin=("gpio0", 13),
     on_message_cb=message_arrived
 )
+uid = nfc.read_mem(ST25DV.UID_REG,8)
+door = Door(uid, debug=True)
 
-print("UID:", nfc.read_mem(ST25DV.UID_REG,8).hex(':'))
+print("UID:", door.uid.hex(':'))
+print("PUBKey:", door.pubkey.hex(':'))
+print("Owners:")
+for owner in door.owners:
+    print("\t", owner.hex(':'))
 print("Waiting for peers...\n")
 
 while True:

@@ -1,5 +1,6 @@
 import os, nrf_oberon
-from time import time_ns
+from time import sleep, time_ns
+from machine import Pin
 
 class SignedMessage:
     def __init__(self, pubkey, payload, signature):
@@ -70,8 +71,9 @@ class Identity:
 class Door(Identity):
     CHALLENGE_TIMEOUT_NS = 5_000_000_000  # 5s
 
-    def __init__(self, debug=False):
+    def __init__(self, uid, debug=False):
         super().__init__()
+        self.uid = uid
         self.owners = self._get_pubkey_list("owners.lst")
         self.blacklist = self._get_pubkey_list("blacklist.lst")
         self._state = {}
@@ -143,11 +145,48 @@ class Door(Identity):
 
     def exec(self, pubkey, command):
         answer = None
+        role = "user"
         if pubkey in self.owners:
             role = "owner"
-            # TODO: admin commands
-        else:
-            role = "user"
-            # TODO: user commands
-        print(f"ROLE: {role}, USER: {pubkey.hex()}, COMMAND: {command.hex()}")
+        self.print(f"ROLE: {role}, USER: {pubkey.hex()}, COMMAND: {command.hex()}")
+        if command[0] == 0:  # LOCK/UNLOCK DOOR
+            self.print("LOCK/UNLOCK door")
+            valid = False
+            if role == "owner":
+                self.print("owner - always granted")
+                # no more checks
+                valid = True
+            else:
+                self.print("user - checking token")
+                # just a user: validate token
+                token = command[1:]
+                # token:
+                # - owner public key: 32 bytes
+                # - door uid:          8 bytes
+                # - user public key:  32 bytes
+                # - user data:         8 bytes
+                # - owner signature:  64 bytes
+                try:
+                    signed = SignedMessage.from_data(token)
+                except:
+                    signed = None
+                if not signed or not signed.is_valid() or len(signed.payload) != 48:
+                    self.print("ERROR: Invalid token")
+                else:
+                    uid = signed.payload[:8]
+                    user_pubkey = signed.payload[8:40]
+                    user_data = signed.payload[40:]
+                    if signed.pubkey in self.owners and uid == self.uid and user_pubkey == pubkey:
+                        # TODO: check user_data for time restrictions
+                        self.print("token valid")
+                        valid = True
+            if valid:
+                self.print("LOCK/UNLOCK command valid")
+                door_cmd = Pin(("gpio0", 2), Pin.OUT)
+                door_cmd.on()
+                sleep(1)
+                door_cmd.off()
+                self.print("LOCK/UNLOCK complete")
+            else:
+                self.print("LOCK/UNLOCK invalid - skipped")
         return answer
