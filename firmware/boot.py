@@ -15,8 +15,8 @@ def message_arrived(nfc, data):
 
 nfc = ST25DV(
     i2c_dev="i2c0",
-    enable_pin=("gpio0", 2),
-    irq_pin=("gpio0", 14),
+    lpd_pin=("gpio0", 13),
+    gpo_pin=("gpio0", 14),
     on_message_cb=message_arrived
 )
 uid = nfc.read_mem(ST25DV.UID_REG,8)

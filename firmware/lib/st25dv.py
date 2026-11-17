@@ -19,10 +19,10 @@ class ST25DV:
 
     IS_DYNAMIC_REGISTER = 0x2000
 
-    def __init__(self, i2c_dev, enable_pin, irq_pin, on_message_cb=None, i2c_pass=None):
+    def __init__(self, i2c_dev, lpd_pin, gpo_pin, on_message_cb=None, i2c_pass=None):
         self.i2c_dev = I2C(i2c_dev)
-        self.enable_pin = Pin(enable_pin, Pin.OUT)
-        self.irq_pin = Pin(irq_pin, Pin.IN)
+        self.lpd_pin = Pin(lpd_pin, Pin.OUT)
+        self.gpo_pin = Pin(gpo_pin, Pin.IN)
         self.on_message_cb = on_message_cb
         self.i2c_pass = i2c_pass or bytes([0] * 8)
         self.reset()
@@ -31,7 +31,7 @@ class ST25DV:
         assert self.lock_rf_config(), "RF config not locked"
         assert self.enable_mb_transfer_mode(), "MB transfer not enabled"
         assert self.enable_mb(), "MB not enabled"
-        self.irq_pin.irq(lambda pin: self.on_gpo())
+        self.gpo_pin.irq(lambda pin: self.on_gpo())
         assert self.configure_gpo(), "GPO not configured"
         self._gpo_fired = 0
 
@@ -48,9 +48,9 @@ class ST25DV:
         return res
 
     def reset(self):
-        self.enable_pin.off()
+        self.lpd_pin(1)
         sleep_ms(1)
-        self.enable_pin.on()
+        self.lpd_pin(0)
         sleep_ms(1)
 
     def is_present(self):
