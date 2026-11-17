@@ -2,7 +2,8 @@ from time import sleep_ms
 from st25dv import ST25DV
 from thyrakey import *
 from pins import *
-from rbg import RGB
+from rgb import RGB
+from machine import Pin
 import time
 
 def hexdump(data):
@@ -10,6 +11,7 @@ def hexdump(data):
         print(data[i:i+8].hex(" "))
 
 rgb = RGB(RGB_PIN)
+lock = Pin(DOOR_LOCK, Pin.OUT)
 
 def message_arrived(nfc, data):
     rgb.blue()
@@ -20,6 +22,11 @@ def message_arrived(nfc, data):
         print(f"Sent answer: {answer.hex()}")
     rgb.off()
 
+def unlock_door():
+    lock(1)
+    time.sleep(1)
+    lock(0)
+
 nfc = ST25DV(
     i2c_dev="i2c0",
     lpd_pin=NFC_LPD,
@@ -27,7 +34,7 @@ nfc = ST25DV(
     on_message_cb=message_arrived
 )
 uid = nfc.read_mem(ST25DV.UID_REG,8)
-door = Door(uid, debug=True)
+door = Door(uid, unlock_door, debug=True)
 
 print("UID:", door.uid.hex(':'))
 print("PUBKey:", door.pubkey.hex(':'))

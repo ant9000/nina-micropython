@@ -71,9 +71,10 @@ class Identity:
 class Door(Identity):
     CHALLENGE_TIMEOUT_NS = 5_000_000_000  # 5s
 
-    def __init__(self, uid, debug=False):
+    def __init__(self, uid, unlock_cb, debug=False):
         super().__init__()
         self.uid = uid
+        self.unlock_cb = unlock_cb
         self.owners = self._get_pubkey_list("owners.lst")
         self.blacklist = self._get_pubkey_list("blacklist.lst")
         self._state = {}
@@ -182,10 +183,7 @@ class Door(Identity):
                         valid = True
             if valid:
                 self.print("LOCK/UNLOCK command valid")
-                door_cmd = Pin(("gpio0", 2), Pin.OUT)
-                door_cmd.on()
-                sleep(1)
-                door_cmd.off()
+                self.unlock_cb()
                 self.print("LOCK/UNLOCK complete")
             else:
                 self.print("LOCK/UNLOCK invalid - skipped")

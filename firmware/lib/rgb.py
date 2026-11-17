@@ -3,7 +3,7 @@ import time
 from machine import Pin, bitstream
 
 class RGB:
-    _TIMING = (150, 1000, 1000, 150)
+    _TIMING = (250, 900, 900, 250)
 
     def __init__(self, pin):
         self.pin = Pin(pin, Pin.OUT)
