@@ -177,6 +177,11 @@ class Door(Identity):
                     uid = signed.payload[:8]
                     user_pubkey = signed.payload[8:40]
                     user_data = signed.payload[40:]
+                    self.print("TOKEN CONTENTS:")
+                    self.print(f"\tsigned by: {signed.pubkey.hex()}")
+                    self.print(f"\tuid: {uid.hex()}")
+                    self.print(f"\tuser: {user_pubkey.hex()}")
+                    self.print(f"\tuser data: {user_data.hex()}")
                     if signed.pubkey in self.owners and uid == self.uid and user_pubkey == pubkey:
                         # TODO: check user_data for time restrictions
                         self.print("token valid")
