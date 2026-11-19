@@ -71,9 +71,8 @@ class ST25DV:
         return self.read_mem(ST25DV.LOCKCFG_REG,1)[0] & 0x01
 
     def enable_mb_transfer_mode(self):
-        value = self.read_mem(ST25DV.MB_MODE_REG,1)[0]
-        value = bytes([value | 0x01])
-        self.write_mem(ST25DV.MB_MODE_REG, value)
+        # no watchdog, mailbox active
+        self.write_mem(ST25DV.MB_MODE_REG, bytes([0x01]))
         sleep_ms(5)
         return self.read_mem(ST25DV.MB_MODE_REG, 1)[0] & 0x01
 
@@ -115,5 +114,18 @@ class ST25DV:
             return message
 
     def mailbox_put(self, message):
+        self.mailbox_status()
         assert len(message) < 255, "Message too long"
         self.write_mem(ST25DV.MAILBOX_RAM_REG, message)
+
+    def mailbox_status(self):
+        value = None
+        for i in range(10):
+            try:
+                value = self.read_mem(ST25DV.MB_CTRL_DYN_REG, 1)[0]
+                break
+            except:
+                sleep_ms(1)
+        if value is None:
+            raise Exception("BUSY")
+        return value

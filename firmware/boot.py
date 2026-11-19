@@ -18,14 +18,17 @@ def message_arrived(nfc, data):
     print(f"Message arrived: {data.hex()}")
     answer = door.process_data(data)
     if answer is not None:
-        nfc.mailbox_put(answer)
-        print(f"Sent answer: {answer.hex()}")
+        try:
+            nfc.mailbox_put(answer)
+            print(f"Sent answer: {answer.hex()}")
+        except Exception as e:
+            print(f"ERROR: {e}")
     rgb.off()
 
+unlock = False
 def unlock_door():
-    lock(1)
-    time.sleep(1)
-    lock(0)
+    global unlock
+    unlock = True
 
 nfc = ST25DV(
     i2c_dev="i2c0",
@@ -44,4 +47,11 @@ for owner in door.owners:
 print("Waiting for peers...\n")
 
 while True:
+    if unlock:
+        unlock = False
+        print("Unlocking... ", end="")
+        lock(1)
+        time.sleep(1)
+        lock(0)
+        print("done.")
     sleep_ms(10)

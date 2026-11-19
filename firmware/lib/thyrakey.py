@@ -138,7 +138,7 @@ class Door(Identity):
             payload = self.exec(signed.pubkey, command)
             if payload is not None:
                 self.print(f"Command result: {payload.hex()}")
-                answer = SignedMessage.sign(self.key, self.pubkey, payload)
+                answer = SignedMessage.sign(self.key, self.pubkey, payload).data
         else:
             self.print("ERROR: peer authentication failed")
         self._state = {}
@@ -189,7 +189,8 @@ class Door(Identity):
             if valid:
                 self.print("LOCK/UNLOCK command valid")
                 self.unlock_cb()
-                self.print("LOCK/UNLOCK complete")
+                answer = b'\x00'
             else:
                 self.print("LOCK/UNLOCK invalid - skipped")
+                answer = b'\x01'
         return answer
