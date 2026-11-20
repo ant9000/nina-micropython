@@ -1,17 +1,13 @@
 """Driver WS2812 e colori di stato"""
-import time
-from machine import Pin, bitstream
+from machine import SPI
+from ws2812 import WS2812
 
 class RGB:
-    _TIMING = (250, 900, 900, 250)
-
-    def __init__(self, pin):
-        self.pin = Pin(pin, Pin.OUT)
+    def __init__(self):
+        self.led = WS2812(spi=SPI("spi1"))
 
     def color(self, r, g, b):
-        data = bytes([g & 0xFF, r & 0xFF, b & 0xFF])
-        bitstream(self.pin, 0, self._TIMING, data)
-        time.sleep_us(80)
+        self.led.show([(r & 0xFF, g & 0xFF, b & 0xFF)])
 
     def red(self, level=255):
         self.color(level, 0, 0)
